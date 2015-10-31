@@ -2,10 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"os/user"
-	"path/filepath"
 	"strings"
 )
 
@@ -13,39 +10,40 @@ func cwd() string {
 	cwd, err := os.Getwd()
 
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	return cwd
 }
 
-func home() string {
-	usr, err := user.Current()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return usr.HomeDir
-}
-
-func main() {
+func ccwd() string {
 	cwd := cwd()
-	home := home()
+	home := os.Getenv("HOME")
+
+	var result string
 
 	if strings.HasPrefix(cwd, home) {
 		cwd = strings.Replace(cwd, home, "~", 1)
+		result = ""
+	} else {
+		cwd = strings.TrimLeft(cwd, "/")
+		result = "/"
 	}
 
-	components := strings.Split(cwd, string(filepath.Separator))
+	components := strings.Split(cwd, string(os.PathSeparator))
+	length := len(components) - 1
 
 	for index, component := range components {
-		if component == "" {
-			fmt.Print("/")
-		} else if index == len(components)-1 {
-			fmt.Println(component)
+		if index == length {
+			result += component
 		} else {
-			fmt.Printf("%c/", []rune(component)[0])
+			result += fmt.Sprintf("%s/", component[0:1])
 		}
 	}
+
+	return result
+}
+
+func main() {
+	fmt.Println(ccwd())
 }
